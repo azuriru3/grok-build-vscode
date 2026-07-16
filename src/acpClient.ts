@@ -6,10 +6,11 @@
  * response) and the public spec at agentclientprotocol.com for the parts
  * that were never exercised live (a successful tool_call/diff sequence).
  *
- * Confirmed live: xAI's implementation sends notification `method` names and
- * `session/update.update.sessionUpdate` values that are NOT in the public
- * spec's docs (`available_commands_update`, `user_message_chunk`, and a family
- * of `_x.ai/*` notifications). Both namespaces are therefore treated as open,
+ * Confirmed live: xAI's implementation sends `session/update.sessionUpdate`
+ * values the spec's prose docs omit but its v1 schema defines
+ * (`available_commands_update`, `user_message_chunk`; the schema has 11
+ * variants, the prompt-turn docs page lists 5), plus a family of `_x.ai/*`
+ * custom notifications. Both namespaces are therefore treated as open,
  * unknown values are surfaced generically rather than dropped or thrown on.
  *
  * No VS Code imports in this file by design, it should be usable/testable
