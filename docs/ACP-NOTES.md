@@ -10,7 +10,7 @@ Notes from testing `grok` 0.2.101 (linux-x86_64) directly, installed via `curl -
 
 Real xAI binary, 162MB ELF, `strings` shows internal crate names (`xai_grok_shell`, `xai_worktree_pool`, `xai_grok_instrumentation`), not a stub or a wrapper.
 
-`grok inspect` reads and displays this project's `.claude/settings.local.json` permissions and lists Claude Code's built-in skills and agents by name. The debug log confirms it: `Loaded Claude Code MCP servers from ~/.claude.json`, `Loaded Cursor MCP servers from ~/.cursor/mcp.json`. Grok Build has real interop with Claude Code and Cursor project config. Worth knowing if you're building on top of this: the extension shouldn't be surprised if Grok Build picks up `.claude/` state sitting in the workspace.
+`grok inspect` reads and displays this project's local permission settings and lists other locally-installed coding-agent tools' built-in skills and agents by name. The debug log confirms it loads MCP server configs from other local coding-agent tools' config files on disk. Grok Build has real interop with other coding-agent project config. Worth knowing if you're building on top of this: the extension shouldn't be surprised if Grok Build picks up other tools' local state sitting in the workspace.
 
 `grok agent stdio` help:
 ```
