@@ -151,6 +151,18 @@ test("missing binary surfaces AcpProcessError with the install hint", async () =
   assert.match(processError.message, /curl -fsSL https:\/\/x\.ai\/cli\/install\.sh \| bash/);
 });
 
+test("cancel() sends session/cancel and resolves", async () => {
+  const { client } = makeClient();
+  cleanups.push(() => client.stop());
+  client.start();
+  await client.initialize();
+  const session = await client.newSession();
+
+  await client.cancel(session.sessionId);
+
+  await client.stop();
+});
+
 test("process exit rejects pending requests", async () => {
   const { client } = makeClient({ promptBehavior: "exitNoResponse" });
   cleanups.push(() => client.stop());

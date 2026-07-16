@@ -62,6 +62,11 @@ rl.on("line", (line) => {
     return;
   }
 
+  if (msg.method === "session/cancel") {
+    send({ jsonrpc: "2.0", id: msg.id, result: {} });
+    return;
+  }
+
   if (msg.method === "session/prompt") {
     if (scenario.emitUnknownNotification) {
       send({ jsonrpc: "2.0", method: "_x.ai/mcp/servers_updated", params: { mcpServers: [] } });

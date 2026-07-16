@@ -20,3 +20,10 @@ test("the CSP script-src nonce matches the inline <script> tag's nonce", () => {
     "CSP and <script> nonce must match, otherwise the browser blocks the panel's own script",
   );
 });
+
+test("the panel has a stop control wired to a cancel message, hidden until a request is in flight", () => {
+  const html = getWebviewHtml({ cspSource: "vscode-webview://dummy" } as never);
+
+  assert.match(html, /<button id="stop" hidden>Stop<\/button>/);
+  assert.match(html, /stop\.addEventListener\("click", \(\) => \{\s*vscode\.postMessage\(\{ type: "cancel" \}\);/);
+});

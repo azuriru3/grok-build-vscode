@@ -84,7 +84,14 @@ export function getWebviewHtml(webview: vscode.Webview): string {
     padding: 0 14px;
     cursor: pointer;
   }
-  #send:disabled { opacity: 0.5; cursor: default; }
+  #stop {
+    margin-left: 8px;
+    background: transparent;
+    color: var(--vscode-errorForeground);
+    border: 1px solid var(--vscode-errorForeground);
+    padding: 0 14px;
+    cursor: pointer;
+  }
   details.raw-toggle {
     margin-top: 6px;
     font-size: 0.8em;
@@ -105,6 +112,7 @@ export function getWebviewHtml(webview: vscode.Webview): string {
   <div id="composer">
     <textarea id="input" rows="2" placeholder="Describe what you want Grok Build to do..."></textarea>
     <button id="send">Send</button>
+    <button id="stop" hidden>Stop</button>
   </div>
 
 <script nonce="${scriptNonce}">
@@ -112,6 +120,7 @@ export function getWebviewHtml(webview: vscode.Webview): string {
   const log = document.getElementById("log");
   const input = document.getElementById("input");
   const send = document.getElementById("send");
+  const stop = document.getElementById("stop");
 
   const requestEntries = new Map(); // requestId -> DOM element
 
@@ -147,6 +156,9 @@ export function getWebviewHtml(webview: vscode.Webview): string {
   }
 
   send.addEventListener("click", submit);
+  stop.addEventListener("click", () => {
+    vscode.postMessage({ type: "cancel" });
+  });
   input.addEventListener("keydown", (e) => {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
@@ -158,8 +170,14 @@ export function getWebviewHtml(webview: vscode.Webview): string {
     const text = input.value.trim();
     if (!text) return;
     input.value = "";
-    send.disabled = true;
+    send.hidden = true;
+    stop.hidden = false;
     vscode.postMessage({ type: "submit", text });
+  }
+
+  function requestSettled() {
+    send.hidden = false;
+    stop.hidden = true;
   }
 
   window.addEventListener("message", (event) => {
@@ -177,14 +195,14 @@ export function getWebviewHtml(webview: vscode.Webview): string {
       case "done": {
         const entry = ensureRequestEntry(msg.requestId);
         entry.appendChild(el("div", { className: "done", text: "Done [" + msg.stopReason + "]" }));
-        send.disabled = false;
+        requestSettled();
         break;
       }
       case "error": {
         const entry = msg.requestId ? ensureRequestEntry(msg.requestId) : el("div", { className: "entry" });
         if (!msg.requestId) log.appendChild(entry);
         entry.appendChild(el("div", { className: "error", text: "Error: " + msg.message }));
-        send.disabled = false;
+        requestSettled();
         break;
       }
       case "raw": {

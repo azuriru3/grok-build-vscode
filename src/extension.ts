@@ -81,6 +81,20 @@ class GrokBuildSession {
   }
 
   private async handleWebviewMessage(msg: { type: string; text?: string }): Promise<void> {
+    if (msg.type === "cancel") {
+      if (this.acp && this.sessionId) {
+        try {
+          await this.acp.cancel(this.sessionId);
+        } catch (err) {
+          this.post({
+            type: "error",
+            message: `Failed to cancel: ${err instanceof Error ? err.message : String(err)}`,
+          });
+        }
+      }
+      return;
+    }
+
     if (msg.type !== "submit" || !msg.text) return;
     if (!this.acp || !this.sessionId) {
       this.post({ type: "error", message: "Grok Build session isn't ready yet." });
