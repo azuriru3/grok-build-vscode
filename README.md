@@ -27,7 +27,7 @@ npm run compile        # or: npm run watch
 ```
 Open this folder in VS Code and press F5 (Run Extension). In the Extension Development Host window, open a folder or workspace and run "Grok Build: Start Session" from the Command Palette.
 
-Type a request into the panel that opens. It gets sent to Grok Build directly, agent messages, tool calls, and diffs stream back into the log as they happen, with the raw JSON available behind a toggle on anything the human-readable summary doesn't cover.
+Type a request into the panel that opens. It gets sent to Grok Build directly, agent messages, tool calls, and diffs stream back into the log as they happen, with the raw JSON available behind a toggle on anything the human-readable summary doesn't cover. Stop cancels the in-flight prompt via `session/cancel` without killing the session.
 
 ## Testing
 
@@ -36,9 +36,19 @@ npm run compile
 npm test
 ```
 
-Runs the unit suite (`node --test`) against `src/acpClient.ts` and `src/webview/panel.ts`: JSON-RPC framing and dispatch, error classification (auth vs. billing/upstream vs. process-level), unknown-method/unknown-`sessionUpdate` passthrough, and the webview's CSP nonce wiring. It runs against a small scripted fake agent (`src/test/fixtures/fake-grok-agent.js`), not the real `grok` binary, so it verifies AcpClient's own logic, not that Grok Build's live traffic still matches what's captured in `docs/ACP-NOTES.md`.
+Runs the unit suite (`node --test`) against `src/acpClient.ts` and `src/webview/panel.ts`: JSON-RPC framing and dispatch, error classification (auth vs. billing/upstream vs. process-level), unknown-method/unknown-`sessionUpdate` passthrough, `session/cancel`, and the webview's CSP nonce wiring and stop-button markup. It runs against a small scripted fake agent (`src/test/fixtures/fake-grok-agent.js`), not the real `grok` binary, so it verifies AcpClient's own logic, not that Grok Build's live traffic still matches what's captured in `docs/ACP-NOTES.md`.
 
 `npm run test-acp-client` is a separate, non-CI smoke test that spawns the real `grok` binary and needs a logged-in account with credits, see the comment at the top of `src/test/acpClient.smoke.ts`.
+
+## Packaging
+
+```
+npm install -g @vscode/vsce
+npm run compile
+vsce package
+```
+
+Produces `grok-build-vscode-<version>.vsix`, installable locally via VS Code's "Install from VSIX..." command, or publishable with `vsce publish` once the `azuriru3` publisher is registered at `marketplace.visualstudio.com/manage` and authenticated (Azure DevOps PATs are being retired December 1, 2026 in favor of Microsoft Entra ID, so set up auth accordingly rather than a PAT that'll need replacing soon). `.vscodeignore` keeps the package to the compiled `out/*.js` plus README/CHANGELOG/LICENSE/icon, no source, no tests, no sourcemaps.
 
 ## Module layout
 
@@ -51,8 +61,8 @@ Runs the unit suite (`node --test`) against `src/acpClient.ts` and `src/webview/
 - No in-app auth management. Auth is environment or config based. The extension points at `grok login` or `XAI_API_KEY` when something's missing, nothing fancier.
 - No persistence. Session state lives in memory and resets on reload or window close.
 - No Neovim support.
-- No marketplace packaging.
-- A real prompt that actually reaches the point of making tool calls (file writes, diffs) hasn't been observed yet in testing, every attempt so far hit a billing wall on the test account before Grok Build could do real work. The tool call event handling in `acpClient.ts` is built from the public ACP spec but not confirmed against what Grok Build actually sends, and the spec already turned out to be incomplete in a couple of places. Worth re-checking once an account with credits is available.
+- Not yet published to the Marketplace, that's a publisher-registration and auth step for whoever owns the `azuriru3` account, not a code gap, see Packaging above.
+- **The one open item that actually matters**: a real prompt that reaches the point of making tool calls (file writes, diffs) has never been observed in testing, every attempt so far hit a billing wall on the test account before Grok Build could do real work. The tool call event handling in `acpClient.ts` is built from the public ACP spec but not confirmed against what Grok Build actually sends, and the spec already turned out to be incomplete in a couple of places. Needs an xAI account with credits to close.
 
 ## License
 

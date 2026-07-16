@@ -4,8 +4,8 @@
   "description": "Embeds xAI's Grok Build coding agent in VS Code over ACP.",
   "version": "0.0.1",
   "publisher": "azuriru3",
-  "private": true,
   "license": "MIT",
+  "icon": "icon.png",
   "repository": {
     "type": "git",
     "url": "https://github.com/azuriru3/grok-build-vscode"
@@ -14,7 +14,7 @@
     "vscode": "^1.85.0",
     "node": ">=18"
   },
-  "categories": ["Other"],
+  "categories": ["AI"],
   "activationEvents": [],
   "main": "./out/extension.js",
   "contributes": {
