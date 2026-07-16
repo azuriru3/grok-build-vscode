@@ -64,10 +64,20 @@ rl.on("line", (line) => {
 
   if (msg.method === "session/cancel") {
     send({ jsonrpc: "2.0", id: msg.id, result: {} });
+    if (scenario.pendingPromptId !== undefined) {
+      send({ jsonrpc: "2.0", id: scenario.pendingPromptId, result: { stopReason: "cancelled" } });
+    }
     return;
   }
 
   if (msg.method === "session/prompt") {
+    if (scenario.promptBehavior === "pendingUntilCancel") {
+      // Don't respond yet. session/cancel above will resolve this once it
+      // arrives, using the id captured here since the test can't know it
+      // ahead of time.
+      scenario.pendingPromptId = msg.id;
+      return;
+    }
     if (scenario.emitUnknownNotification) {
       send({ jsonrpc: "2.0", method: "_x.ai/mcp/servers_updated", params: { mcpServers: [] } });
     }

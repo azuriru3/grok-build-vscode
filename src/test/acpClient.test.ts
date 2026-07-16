@@ -163,6 +163,25 @@ test("cancel() sends session/cancel and resolves", async () => {
   await client.stop();
 });
 
+test("cancelling a still-in-flight prompt resolves it with stopReason 'cancelled', doesn't just leave it hanging", async () => {
+  const { client } = makeClient({ promptBehavior: "pendingUntilCancel" });
+  cleanups.push(() => client.stop());
+  client.start();
+  await client.initialize();
+  const session = await client.newSession();
+
+  const promptPromise = client.prompt(session.sessionId, "do something long-running");
+  // Give the fake agent's stdin listener a tick to receive session/prompt
+  // and record its id before we send session/cancel.
+  await new Promise((resolve) => setTimeout(resolve, 50));
+
+  const [promptResult] = await Promise.all([promptPromise, client.cancel(session.sessionId)]);
+
+  assert.equal(promptResult.stopReason, "cancelled");
+
+  await client.stop();
+});
+
 test("process exit rejects pending requests", async () => {
   const { client } = makeClient({ promptBehavior: "exitNoResponse" });
   cleanups.push(() => client.stop());
