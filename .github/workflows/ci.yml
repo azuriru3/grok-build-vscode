@@ -1,0 +1,28 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - run: npm ci
+
+      - run: npm run compile
+
+      - name: Orchestrator control-flow tests
+        run: node ./out/test/orchestrator.mock.js
+
+      # acpClient.smoke.js needs a real grok binary plus xAI credentials,
+      # neither of which exist on a CI runner, so it's not run here. Run it
+      # locally with the binary installed and XAI_API_KEY set instead.
