@@ -3,6 +3,7 @@
   "displayName": "Grok Build (Fable 5 orchestrated)",
   "description": "Embeds xAI's Grok Build coding agent in VS Code over ACP, with a Claude Fable 5 orchestrator routing requests by complexity.",
   "version": "0.0.1",
+  "publisher": "azuriru3",
   "private": true,
   "license": "MIT",
   "repository": {
