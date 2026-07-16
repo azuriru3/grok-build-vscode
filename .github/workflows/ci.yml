@@ -20,9 +20,6 @@ jobs:
 
       - run: npm run compile
 
-      - name: Orchestrator control-flow tests
-        run: node ./out/test/orchestrator.mock.js
-
       # acpClient.smoke.js needs a real grok binary plus xAI credentials,
       # neither of which exist on a CI runner, so it's not run here. Run it
       # locally with the binary installed and XAI_API_KEY set instead.

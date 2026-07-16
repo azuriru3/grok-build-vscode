@@ -1,6 +1,6 @@
 /**
- * Plain HTML/CSS/JS webview, no framework. This UI (a message log, a text
- * box, a couple of buttons) doesn't need one.
+ * Plain HTML/CSS/JS webview, no framework. This UI is a message log, a text
+ * box, and a send button, that doesn't need one.
  */
 import * as vscode from "vscode";
 
@@ -51,37 +51,16 @@ export function getWebviewHtml(webview: vscode.Webview): string {
     font-weight: 600;
     white-space: pre-wrap;
   }
-  .badge {
-    display: inline-block;
-    font-size: 0.85em;
-    font-weight: 600;
-    padding: 1px 8px;
-    border-radius: 10px;
-    margin: 4px 0;
+  .agent-update {
+    white-space: pre-wrap;
+    font-size: 0.95em;
+    margin-top: 4px;
+    opacity: 0.9;
   }
-  .badge-trivial { background: var(--vscode-charts-green, #2ea043); color: white; }
-  .badge-complex { background: var(--vscode-charts-purple, #8957e5); color: white; }
-  .reasoning { font-size: 0.85em; opacity: 0.75; margin-bottom: 4px; }
-  .step {
-    margin: 4px 0 4px 12px;
-    padding: 4px 8px;
-    border-left: 2px solid var(--vscode-textLink-foreground);
-  }
-  .step-instruction { font-weight: 600; }
-  .step-summary { white-space: pre-wrap; font-size: 0.95em; margin-top: 2px; }
+  .done { font-size: 0.85em; opacity: 0.7; margin-top: 4px; }
   .error {
     color: var(--vscode-errorForeground);
     white-space: pre-wrap;
-  }
-  .escalate-btn, .restart-btn {
-    font-size: 0.8em;
-    margin-left: 8px;
-    cursor: pointer;
-    background: none;
-    border: 1px solid var(--vscode-button-border, #555);
-    color: var(--vscode-foreground);
-    border-radius: 4px;
-    padding: 1px 6px;
   }
   #composer {
     display: flex;
@@ -140,7 +119,6 @@ export function getWebviewHtml(webview: vscode.Webview): string {
     const e = document.createElement(tag);
     if (opts?.className) e.className = opts.className;
     if (opts?.text !== undefined) e.textContent = opts.text;
-    if (opts?.html !== undefined) e.innerHTML = opts.html;
     return e;
   }
 
@@ -153,6 +131,11 @@ export function getWebviewHtml(webview: vscode.Webview): string {
       requestEntries.set(requestId, entry);
     }
     return entry;
+  }
+
+  function latestEntry() {
+    const entries = [...requestEntries.values()];
+    return entries.length ? entries[entries.length - 1] : log;
   }
 
   function appendRaw(container, payload) {
@@ -187,51 +170,13 @@ export function getWebviewHtml(webview: vscode.Webview): string {
         entry.appendChild(el("div", { className: "user-msg", text: msg.text }));
         break;
       }
-      case "classified": {
-        const entry = ensureRequestEntry(msg.requestId);
-        const badge = el("span", {
-          className: "badge " + (msg.complexity === "trivial" ? "badge-trivial" : "badge-complex"),
-          text: msg.complexity === "trivial" ? "Trivial → Grok Build" : "Complex → Fable 5 planning",
-        });
-        entry.appendChild(badge);
-        if (msg.complexity === "trivial") {
-          const escalateBtn = el("button", { className: "escalate-btn", text: "Escalate to complex" });
-          escalateBtn.addEventListener("click", () => {
-            escalateBtn.disabled = true;
-            vscode.postMessage({ type: "escalate", requestId: msg.requestId });
-          });
-          entry.appendChild(escalateBtn);
-        }
-        entry.appendChild(el("div", { className: "reasoning", text: msg.reasoning }));
-        break;
-      }
-      case "planUpdated": {
-        const entry = ensureRequestEntry(msg.requestId);
-        const badge = entry.querySelector(".badge-complex");
-        if (badge) badge.textContent = "Complex → Fable 5 planning, " + msg.subtasks.length + " steps";
-        break;
-      }
-      case "stepStarted": {
-        const entry = ensureRequestEntry(msg.requestId);
-        const step = el("div", { className: "step" });
-        step.dataset.stepIndex = String(msg.index);
-        step.appendChild(el("div", { className: "step-instruction", text: "Step " + msg.index + ": " + msg.instruction }));
-        step.appendChild(el("div", { className: "step-summary", text: "(running...)" }));
-        entry.appendChild(step);
-        break;
-      }
-      case "stepCompleted": {
-        const entry = ensureRequestEntry(msg.requestId);
-        const step = entry.querySelector('.step[data-step-index="' + msg.index + '"]');
-        if (step) {
-          const summaryEl = step.querySelector(".step-summary");
-          summaryEl.textContent = (msg.summary || "(no output captured)") + "  [" + msg.stopReason + "]";
-        }
+      case "agentUpdate": {
+        latestEntry().appendChild(el("div", { className: "agent-update", text: msg.text }));
         break;
       }
       case "done": {
         const entry = ensureRequestEntry(msg.requestId);
-        entry.appendChild(el("div", { className: "reasoning", text: "Done (" + msg.totalSteps + " step" + (msg.totalSteps === 1 ? "" : "s") + ")." }));
+        entry.appendChild(el("div", { className: "done", text: "Done [" + msg.stopReason + "]" }));
         send.disabled = false;
         break;
       }
@@ -243,11 +188,7 @@ export function getWebviewHtml(webview: vscode.Webview): string {
         break;
       }
       case "raw": {
-        // Global raw ACP traffic log, appended to the most recent entry so it
-        // stays roughly in context without needing per-message correlation.
-        const entries = [...requestEntries.values()];
-        const container = entries.length ? entries[entries.length - 1] : log;
-        appendRaw(container, msg.payload);
+        appendRaw(latestEntry(), msg.payload);
         break;
       }
     }

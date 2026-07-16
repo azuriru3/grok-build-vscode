@@ -320,3 +320,41 @@ export class AcpClient extends EventEmitter {
     return this.request("session/cancel", { sessionId });
   }
 }
+
+/** One human-readable line per session/update, for the UI's default view.
+ * Raw JSON stays available behind a toggle for anything this doesn't cover.
+ * Unknown sessionUpdate types (see file header) fall through to a generic
+ * label rather than being dropped. */
+export function summarizeSessionUpdate(update: { sessionUpdate: string } & Record<string, unknown>): string {
+  switch (update.sessionUpdate) {
+    case "agent_message_chunk": {
+      const text = (update.content as { text?: string } | undefined)?.text ?? "";
+      return text;
+    }
+    case "user_message_chunk":
+      return ""; // echo of our own prompt, not useful to show again
+    case "plan": {
+      const entries = (update.entries as Array<{ content?: string; status?: string }> | undefined) ?? [];
+      return "Plan:\n" + entries.map((e) => `  - [${e.status ?? "?"}] ${e.content ?? ""}`).join("\n");
+    }
+    case "tool_call": {
+      const title = (update.title as string | undefined) ?? "(untitled)";
+      const kind = (update.kind as string | undefined) ?? "other";
+      return `Tool call started (${kind}): ${title}`;
+    }
+    case "tool_call_update": {
+      const status = (update.status as string | undefined) ?? "unknown";
+      const content = (update.content as Array<Record<string, unknown>> | undefined) ?? [];
+      const diffLines = content
+        .filter((c) => c.type === "diff")
+        .map((c) => `    diff @ ${c.path as string}`);
+      return [`Tool call ${status}`, ...diffLines].join("\n");
+    }
+    case "usage_update":
+      return ""; // token accounting, not useful in the message log
+    case "available_commands_update":
+      return ""; // seen live, not relevant to task progress
+    default:
+      return `[${update.sessionUpdate}]`;
+  }
+}
