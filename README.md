@@ -1,6 +1,12 @@
 # Grok Build for VS Code
 
+[![CI](https://github.com/azuriru3/grok-build-vscode/actions/workflows/ci.yml/badge.svg)](https://github.com/azuriru3/grok-build-vscode/actions/workflows/ci.yml)
+
 Runs xAI's Grok Build coding agent inside VS Code over the Agent Client Protocol (ACP). Type a request into a panel, it goes straight to Grok Build over `grok agent stdio`, and the results stream back into the panel.
+
+![Grok Build panel showing a completed request and a billing error](docs/images/panel-screenshot.png)
+
+The conversation above is sample data rendered through the extension's real webview HTML/CSS, not a live run, the tool-call/diff content is illustrative. The error line at the bottom is real: it's the actual message shape the extension produces for the billing error captured live in `docs/ACP-NOTES.md`.
 
 See `docs/ACP-NOTES.md` for protocol notes: real captured traffic, what the public docs get wrong, and what still needs testing.
 
@@ -22,6 +28,17 @@ npm run compile        # or: npm run watch
 Open this folder in VS Code and press F5 (Run Extension). In the Extension Development Host window, open a folder or workspace and run "Grok Build: Start Session" from the Command Palette.
 
 Type a request into the panel that opens. It gets sent to Grok Build directly, agent messages, tool calls, and diffs stream back into the log as they happen, with the raw JSON available behind a toggle on anything the human-readable summary doesn't cover.
+
+## Testing
+
+```
+npm run compile
+npm test
+```
+
+Runs the unit suite (`node --test`) against `src/acpClient.ts` and `src/webview/panel.ts`: JSON-RPC framing and dispatch, error classification (auth vs. billing/upstream vs. process-level), unknown-method/unknown-`sessionUpdate` passthrough, and the webview's CSP nonce wiring. It runs against a small scripted fake agent (`src/test/fixtures/fake-grok-agent.js`), not the real `grok` binary, so it verifies AcpClient's own logic, not that Grok Build's live traffic still matches what's captured in `docs/ACP-NOTES.md`.
+
+`npm run test-acp-client` is a separate, non-CI smoke test that spawns the real `grok` binary and needs a logged-in account with credits, see the comment at the top of `src/test/acpClient.smoke.ts`.
 
 ## Module layout
 

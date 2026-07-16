@@ -26,8 +26,9 @@
     ]
   },
   "scripts": {
-    "compile": "tsc -p ./",
+    "compile": "tsc -p ./ && mkdir -p out/test/fixtures && cp src/test/fixtures/*.js out/test/fixtures/ && chmod +x out/test/fixtures/*.js",
     "watch": "tsc -watch -p ./",
+    "test": "node --test out/test/*.test.js",
     "test-acp-client": "node ./out/test/acpClient.smoke.js"
   },
   "devDependencies": {
