@@ -1,0 +1,50 @@
+{
+  "name": "grok-build-vscode",
+  "displayName": "Grok Build (Fable 5 orchestrated)",
+  "description": "Embeds xAI's Grok Build coding agent in VS Code over ACP, with a Claude Fable 5 orchestrator routing requests by complexity.",
+  "version": "0.0.1",
+  "private": true,
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/azuriru3/grok-build-vscode"
+  },
+  "engines": {
+    "vscode": "^1.85.0",
+    "node": ">=18"
+  },
+  "categories": ["Other"],
+  "activationEvents": [],
+  "main": "./out/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "grokBuild.startSession",
+        "title": "Grok Build: Start Session"
+      }
+    ],
+    "configuration": {
+      "title": "Grok Build",
+      "properties": {
+        "grokBuild.anthropicApiKey": {
+          "type": "string",
+          "default": "",
+          "description": "Anthropic API key for the Fable 5 orchestrator. Falls back to the ANTHROPIC_API_KEY environment variable if unset. Prefer the environment variable, settings.json is not a secrets store."
+        }
+      }
+    }
+  },
+  "scripts": {
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "test-acp-client": "node ./out/test/acpClient.smoke.js"
+  },
+  "devDependencies": {
+    "@types/node": "^20.14.0",
+    "@types/vscode": "^1.85.0",
+    "typescript": "^5.5.0"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.111.0"
+  }
+}
