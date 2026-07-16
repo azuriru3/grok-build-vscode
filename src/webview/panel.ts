@@ -12,13 +12,13 @@ function nonce(): string {
 }
 
 export function getWebviewHtml(webview: vscode.Webview): string {
+  const scriptNonce = nonce();
   const csp = [
     `default-src 'none'`,
     `img-src ${webview.cspSource} https: data:`,
     `style-src 'unsafe-inline'`,
-    `script-src 'nonce-${nonce()}'`,
+    `script-src 'nonce-${scriptNonce}'`,
   ].join("; ");
-  const scriptNonce = nonce();
 
   return /* html */ `<!DOCTYPE html>
 <html lang="en">
